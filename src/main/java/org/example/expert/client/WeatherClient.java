@@ -23,16 +23,24 @@ public class WeatherClient {
     }
 
     public String getTodayWeather() {
+
         ResponseEntity<WeatherDto[]> responseEntity =
                 restTemplate.getForEntity(buildWeatherApiUri(), WeatherDto[].class);
 
+        // 기존: if문 중첩
+        // 리팩터링: if문 - if문 으로 중첩 해제
         WeatherDto[] weatherArray = responseEntity.getBody();
+
+        // responseEntity 의 getStatusCode 코드가 OK가 아니면, 예외 / 맞으면, 통과
         if (!HttpStatus.OK.equals(responseEntity.getStatusCode())) {
             throw new ServerException("날씨 데이터를 가져오는데 실패했습니다. 상태 코드: " + responseEntity.getStatusCode());
-        } else {
-            if (weatherArray == null || weatherArray.length == 0) {
-                throw new ServerException("날씨 데이터가 없습니다.");
-            }
+        }
+
+        // weatherArray 가 아예 없거나 (비어있는게 아님, responseEntity (ResponseEntity) 의 body 에서 반환 자체를 안함) => 통신 도중 오류 발생 등 (NullPointerException 방지) 날씨 데이터가 있을 수 있지만 못받음 (없을 수도 있음)
+        // or
+        // weatherArray 길이가 0 = responseEntity (ResponseEntity) 의 body 비어있는 객체를 반환, Array 도 비어있게 되고, 길이가 0이됨. => 통신은 성공했으나, 날씨 데이터가 진짜로 없음.
+        if (weatherArray == null || weatherArray.length == 0) {
+            throw new ServerException("날씨 데이터가 없습니다.");
         }
 
         String today = getCurrentDate();
