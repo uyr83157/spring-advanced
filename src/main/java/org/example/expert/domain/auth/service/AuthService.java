@@ -26,13 +26,18 @@ public class AuthService {
     @Transactional
     public SignupResponse signup(SignupRequest signupRequest) {
 
-        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-
-        UserRole userRole = UserRole.of(signupRequest.getUserRole());
+        // 기존: 비밀번호 암호화 -> userRole 검증 -> 이메일 검증 => 무조건 비밀번호 암호화 진행
+        // 리팩터링 : 이메일 검증 - > 비밀번호 암호화 -> userRole 검증 => 상황에 따라 비밀번호 암호화 진행
+        // 좀 더 나은 리팩터링을 위해선 userRole 검증도 앞으로 땡겨와도 될 거 같음
 
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new InvalidRequestException("이미 존재하는 이메일입니다.");
         }
+
+        String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+
+        UserRole userRole = UserRole.of(signupRequest.getUserRole());
+
 
         User newUser = new User(
                 signupRequest.getEmail(),
