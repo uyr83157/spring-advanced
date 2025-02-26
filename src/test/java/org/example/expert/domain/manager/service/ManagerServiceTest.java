@@ -39,14 +39,19 @@ class ManagerServiceTest {
     private ManagerService managerService;
 
     @Test
-    public void manager_목록_조회_시_Todo가_없다면_NPE_에러를_던진다() {
+    public void manager_목록_조회_시_Todo가_없다면_IRE_에러를_던진다() {
         // given
         long todoId = 1L;
         given(todoRepository.findById(todoId)).willReturn(Optional.empty());
+        // findById(todoId): todoId 으로 엔티티 파인드 => Optional 객체로 반환 하기 때문에 찾는 데 실패 했으면 Optional.empty() 으로 반환함
+        // willReturn(A): 앞이 어떤 것이든 A 값으로 고정 반환 시킴. => willReturn(Optional.empty()): findById(todoId) 값이 어떻든 무조건 Optional.empty() 반환
+
 
         // when & then
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> managerService.getManagers(todoId));
-        assertEquals("Manager not found", exception.getMessage());
+//        assertEquals("Manager not found", exception.getMessage());
+        assertEquals("Todo not found", exception.getMessage());
+        // managerService.getManagers 메서드가 InvalidRequestException 예외를 던지면서 "Todo not found" 메세지를 반환
     }
 
     @Test
